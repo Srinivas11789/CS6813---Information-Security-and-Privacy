@@ -1,0 +1,11 @@
+################################################################################################################################
+# Testcase : Unknown File Operation/ Non Existant File Operation ->  Operation on a file that does not exist
+################################################################################################################################
+
+try:
+ removefile("unknown1234.txt")
+except RepyArgumentError:
+ pass
+else:
+ log("Testcase : Unknown File Operation - Fails !")
+

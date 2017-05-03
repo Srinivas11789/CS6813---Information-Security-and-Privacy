@@ -1,0 +1,20 @@
+#############################################################################################################
+# Test case : INV = Private_ Sceanrio => Write INV to the file and check if it is listed in listfiles()
+                                        # Other Operations should work fine (Open/Close/Read/Write/Delete)
+############################################################################################################
+
+myfile = openfile("private_testfile.txt", True)
+
+myfile.writeat("INV", 0)
+
+myfile.close()
+
+if "private_testfile.txt" in listfiles():
+  log("Testcase INV: ERROR! File not invisible.\n")
+
+try:
+  removefile("private_testfile.txt")
+except:
+  log("Testcase INV: ERROR! Not Allowed to delete the file.\n")
+
+

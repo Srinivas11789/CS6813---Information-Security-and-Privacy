@@ -1,0 +1,195 @@
+###########################################################################################################
+#
+#                                   Reference Monitor - Secure Layer
+#
+#                            ---- Run as a part of the Seattle Project -----
+#
+#  Created By Srinivas Piskala Ganesh Babu
+#
+#  References : 
+#    * https://seattle.poly.edu/wiki/PythonVsRepy
+#    * https://seattle.poly.edu/wiki/EducationalAssignments/ProtectFilePartOne
+# 
+#  Mandatory Conditions Handled:
+#    1. Filename starting with "private_" 
+#       1.1 "INV" in content - Not visible in listfiles()
+#       1.2 "PER" in content - Not able to delete the file
+#
+#  Corner Case Conditions Handled:
+#    1. Dictionary Used for INV and PER Buffers for Quick Access
+#    2. File Length Calculation when a File is Opened or a Write is Done
+#    3. No LOCK used for READ to optimise multiple read to a file
+#    4. LOCK added to Write Call as a mandatory condition
+#    5. Offset and Length validation done both during read and write
+#    6. Write Call - File Length Update Logic added once a write is completed successfully
+#    7. Sec_OpenFile - Filename for UPPER case or Special Character prevention Check added
+#    8. ListFiles- Removed the files that are in the INV Buffers from the list of listfiles()
+#    9. RemoveFile - Cross Checked with the PER Buffers before deleting to confirm the preference
+#
+#  Extra Credit Handle:
+#       Handled spearately in another file
+#  Corner Case Handles:
+#    1. Apply a lock when the File Handle is active to eradicate parallel access
+#
+###########################################################################################################
+
+#Global Dictionary to Store the Filenames with INV and PER in Content
+db = {"INV":[],"PER":[]}
+
+# Secure File Class Handles File Handlers, Read, Write and Close Calls
+class SecureFile():
+# Default Constructor Module - Sets the FileHandle, Filename and FileLength with Read call  at offset 0
+   def __init__(self, file, filename):
+       self.file = file
+       self.filename = filename
+       self.filelength = len(self.file.readat(None,0))
+
+# ReadAt Function - Offset and Length Validation then Read & Return ReadData
+# For Optimization - Allowed Read without a LOCK() - Assuming Multiple LOCKS will slow down the system
+# Read devoid of locks to promote multiple reads to a file with less hassle and delay   
+   def readat(self, length, offset):
+# Offset Validation
+       if offset < 0:
+         raise ValueError
+       elif offset > self.filelength:
+          raise ValueError
+# Read Data Block Length Validation
+       if self.filelength < offset+length:
+          raise ValueError   
+# Try Reading the File else raise Exception - To Make Sure if any corner condition hit doesnt break the secure layer
+       try:
+          read_data = self.file.readat(length,offset)
+          return read_data
+       except:
+          raise RepyArgumentError
+
+# WriteAt Function - LOCK, Offset and Length Validation then Write the Data
+# For Write Call, LOCK is Mandatory because multiple write to a file wont suffice proper functionality
+   def writeat(self,data,offset):
+# Creating the LOCK
+       self.lock = createlock() 
+# Set the Lock to Blocking
+       self.lock.acquire(True)
+# The Assignment Condition Validation
+       if offset==0 and self.filename.startswith("private_"):
+# Moving INV and PER file to respective Buffers in Dictionary
+          if data == "INV":
+             db['INV'].append(self.filename)
+             try:
+                db['PER'].remove(self.filename)
+             except ValueError:
+                pass
+          elif data == "PER":
+             db['PER'].append(self.filename)
+             try:
+                db['INV'].remove(self.filename)
+             except ValueError:
+                pass
+# Offset Validation for Write Call
+       if offset < 0:
+           raise ValueError
+       elif offset > self.filelength:
+           raise ValueError
+# Try Writing a file else Exception - to protect from any corner cases occuring during Write Call
+       try:
+          self.file.writeat(data, offset)
+# Lock Release
+          self.lock.release()
+       except:
+          raise RepyArgumentError
+# Logic To update the Length of the File once the write has been made
+# Setting the Filename to a temp and Opening the File Again to get the length of file
+       old_file = self.filename
+       self.file.close()
+# Updating the Variable once the file is reopened
+       new_handle = openfile(old_file,True)
+       self.file = new_handle
+       self.filename = old_file
+       self.filelength = len(self.file.readat(None,0))
+       return
+
+# Close Function Call
+   def close(self):
+       return self.file.close()
+
+# Secure OPEN File Function
+def secure_openfile(filename, create):
+# File Name condition for Preventing Uppercase or Special Characters Present
+# Stripping the Filename and the extension
+    name = filename.split('.')[0]
+    for char in name:
+# Uppercase validation and prevention in filename
+     if char.isupper():
+       raise RepyArgumentError("Error! Invalid Filename - Uppercase not Allowed\n")
+     else:
+       pass
+# Special Characters validation and prevention in filename
+     if not char.isalnum():
+         if char == "_":
+              pass
+         else:
+              raise RepyArgumentError("Error! Invalid Filename - Non Alpha Numeric not Allowed\n")
+     else:
+        pass
+# File Open Handle
+    try:
+        handle = openfile(filename,create)
+        return SecureFile(handle,filename)
+    except:
+        raise RepyArgumentError("Error! Unable to Open the File\n")
+
+# Listfile Function
+def secure_listfiles():
+# Iterated through the INV Buffers to remove any files from visibility
+   files =  listfiles()
+   noinv = []
+   for file in files:
+       if file not in db['INV']:
+             noinv.append(file)
+   return noinv
+
+# Remove File Function
+def secure_removefile(filename):
+# PER Buffers reference to prevent the File that doesnt have proper Delete permission
+  try:
+   if filename in db['PER']:
+      raise RepyArgumentError("Cannot Delete this File!\n")
+   else:
+      return removefile(filename)
+  except:
+      raise RepyArgumentError("Unable to Remove this file!\n")
+
+
+# The code here sets up type checking and variable hiding for you. You should not need to change anything below here.
+sec_file_def = {
+  "obj-type":SecureFile,
+  "name":"SecureFile",
+  "readat":{"type":"func","args":((int,long,type(None)),(int,long)),"exceptions":Exception,"return":str,"target":SecureFile.readat},
+  "writeat":{"type":"func","args":(str,(int,long)),"exceptions":Exception,"return":(None),"target":SecureFile.writeat},
+  "close":{"type":"func","args":None,"exceptions":None,"return":(bool,type(None)),"target":SecureFile.close}
+  }
+
+CHILD_CONTEXT_DEF["openfile"] = {"type":"objc",
+                                 "args":(str,bool),
+                                 "exceptions":Exception,
+                                 "return":sec_file_def,
+                                 "target":secure_openfile
+                                }
+
+CHILD_CONTEXT_DEF["listfiles"] = {"type":"func",
+                                  "args":None,
+                                  "return":list,
+                                  "exceptions":"any",
+                                  "target":secure_listfiles
+                                 }
+
+CHILD_CONTEXT_DEF["removefile"] = {"type":"func",
+                                   "args":(str,),
+                                   "return":None,
+                                   "exceptions":"any",
+                                   "target":secure_removefile
+                                  }
+
+# Execute the user code
+secure_dispatch_module()
+

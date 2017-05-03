@@ -1,0 +1,23 @@
+######################################################################################################
+# Test case 1: Private_ = "PER" Sceanrio - Write PER to the file and check if it can be deleted
+#   				           (Other Operations are succssfull Open/Close/Read/Write)
+######################################################################################################
+
+
+myfile = openfile("private_testfile.txt", True)
+
+myfile.writeat("PER", 0)
+
+myfile.close()
+
+if "private_testfile.txt" not in listfiles():
+  log("Testcase PER: ERROR! File invisible.\n")
+
+try:
+  removefile("private_testfile.txt")
+except RepyArgumentError:
+  pass
+else:
+  log("Testcase PER: ERROR! Allowed me to delete the file.\n")
+
+

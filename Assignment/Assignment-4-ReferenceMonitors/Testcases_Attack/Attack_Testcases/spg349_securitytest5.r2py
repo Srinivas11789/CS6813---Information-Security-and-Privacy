@@ -1,0 +1,26 @@
+######################################################################################################
+# Testcase : Repeat process of 1 PER and 2 INV on a file without Private_
+#             Operation on File Without Private_
+######################################################################################################
+
+myfile = openfile("foo.txt", True)
+
+if "foo.txt" not in listfiles():
+  log("Testcase NonPrivate_ : ERROR! File not visible.\n")
+
+myfile.writeat("INV", 0)
+
+if "foo.txt" not in listfiles():
+  log("Testcase NonPrivate_ : ERROR! File invisible.\n")
+
+myfile.writeat("PER", 0)
+
+myfile.close()
+
+try:
+  removefile("foo.txt")
+except:
+  log("Testcase NonPrivate_ PER: ERROR! Not Allowed me to delete the file.\n")
+
+
+

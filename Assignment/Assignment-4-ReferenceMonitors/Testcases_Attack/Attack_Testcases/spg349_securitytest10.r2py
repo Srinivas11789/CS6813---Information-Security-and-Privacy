@@ -1,0 +1,37 @@
+# Multi/Parallel Operations
+######################################################################################################
+# Test case : Private_ = Simultaneous Operations
+######################################################################################################
+
+
+def per_check():
+  if "private_testfile.txt" not in listfiles():
+    log("Testcase PER: ERROR! File invisible.\n")
+
+  try:
+    removefile("private_testfile.txt")
+  except RepyArgumentError:
+    pass # There should be an exception here!
+  else:
+    log("Testcase PER: ERROR! Allowed me to delete the file.\n")
+
+
+def inv_check():
+    if "private_testfile.txt" in listfiles():
+       log("Testcase INV: ERROR! File not invisible.\n")
+
+
+
+for i in range(1,1000):
+ myfile = openfile("private_testfile.txt", True)
+ if i%2==0:
+   myfile.writeat("PER", 0)
+   myfile.close()
+   per_check()
+ else:
+   myfile.writeat("INV",0)
+   myfile.close()
+   inv_check()
+
+
+

@@ -1,0 +1,14 @@
+#########################################################################################################
+# Testcase 5: Writing at an Irrevant Offset - Higher Offset Handle
+##########################################################################################################
+
+myfile12 = openfile("offmanipul.txt", True)
+try:
+   myfile12.writeat("III",1000)
+except RepyArgumentError:
+   pass
+else:
+   log("Error:Offset greater than filesize or EOF not handled!")
+myfile12.close()
+
+

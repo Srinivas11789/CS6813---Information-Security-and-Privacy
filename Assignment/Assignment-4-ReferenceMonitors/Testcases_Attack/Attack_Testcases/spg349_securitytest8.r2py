@@ -1,0 +1,13 @@
+###########################################################
+# Testcase - Invalid Input - Different Datatype
+##########################################################
+myfile1 = openfile("off.txt", True)
+try:
+ myfile1.writeat(10000*5,0)
+except RepyArgumentError:
+ pass
+else:
+ log("Testcase : Invalid String not Handled!")
+
+
+

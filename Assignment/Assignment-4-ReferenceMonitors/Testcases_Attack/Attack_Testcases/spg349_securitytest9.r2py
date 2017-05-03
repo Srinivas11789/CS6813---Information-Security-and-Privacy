@@ -1,0 +1,42 @@
+# Multi/Parallel Operations
+######################################################################################################
+# Test case : Parallel : Private_ = Parallel thread Operations
+######################################################################################################
+
+
+mycontext['ThreadActive'] = False
+
+def thread():
+  if mycontext['ThreadActive'] == True:
+     sleep(1)
+  mycontext['ThreadActive'] = True
+  myfile = openfile("private_testfile.txt",  True)
+  if "private_testfile.txt" not in listfiles():
+    log("Testcase PER: ERROR! File invisible.\n")
+  myfile.writeat("PER", 0)
+  myfile.close()
+  try:
+    removefile("private_testfile.txt")
+  except RepyArgumentError:
+    pass # There should be an exception here!
+  else:
+    log("Testcase PER: ERROR! Allowed me to delete the file.\n")
+  mycontext['ThreadActive'] = False
+
+
+
+def thread1():
+   if mycontext['ThreadActive'] == True:
+     sleep(1)
+   mycontext['ThreadActive'] = True
+   myfile = openfile("private_testfile.txt",  True)
+   myfile.writeat("INV",0)
+   myfile.close()
+   if "private_testfile.txt" in listfiles():
+     log("Testcase INV: ERROR! File not invisible.\n")
+   mycontext['ThreadACtive'] = False
+
+createthread(thread)
+createthread(thread1)
+createthread(thread)
+createthread(thread1)

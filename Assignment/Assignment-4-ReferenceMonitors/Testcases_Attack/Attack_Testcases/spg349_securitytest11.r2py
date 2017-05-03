@@ -1,0 +1,40 @@
+#############################################################
+# Testcase - Invalid Offset Handle
+############################################################
+
+myfile1 = openfile("off.txt", True)
+myfile1.writeat("aaaaa",0)
+
+try:
+ myfile1.writeat("INV",1000)
+except RepyArgumentError:
+ pass
+else:
+ log("Testcase : Invalid Offsets not Handled!")
+
+
+try:
+ myfile1.writeat("INV",-2)
+except RepyArgumentError:
+ pass
+else:
+ log("Testcase : Invalid Offsets not Handled!")
+ 
+
+try:
+ myfile1.readat(0,1000%2)
+except RepyArgumentError:
+ pass
+else:
+ log("Testcase : Invalid Offsets not Handled!")
+
+
+try:
+ myfile1.readat(1.-2)
+except RepyArgumentError:
+ pass
+else:
+ log("Testcase : Invalid Offsets not Handled!")
+
+
+myfile1.close()

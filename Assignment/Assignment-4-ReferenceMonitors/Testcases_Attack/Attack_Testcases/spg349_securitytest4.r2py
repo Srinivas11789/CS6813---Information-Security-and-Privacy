@@ -1,0 +1,40 @@
+########################################################################################################
+# Testcase : File Name Not Allowed Scenario
+#            Choice of Filenames - Allowed: Only Lower case / Uppercase,Spl Charc not allowed
+#######################################################################################################
+
+# Uppercase
+try:
+ myfile1 = openfile("Look.txt", True)
+ myfile1.writeat("PER",0)
+except RepyArgumentError:
+ pass
+else:
+ log("Error! Disallowed Filename Allowed to create: Uppercase character !\n")
+
+
+# Special Characters that are prohibited
+try:
+ myfile2 = openfile("look().txt", True)
+ myfile2.writeat("PER",0)
+ myfile2.close()
+except RepyArgumentError:
+ pass
+else:
+ log("Error! Disallowed Filename Allowed to create !\n")
+
+try:
+ myfile3 = openfile("look/.txt", True)
+except RepyArgumentError:
+ pass
+else:
+ log("Error! Disallowed Filename Allowed to create !\n")
+
+try:
+ myfile4 = openfile("look@.txt", True)
+except RepyArgumentError:
+ pass
+else:
+ log("Error! Disallowed Filename Allowed to create !\n")
+
+

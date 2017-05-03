@@ -1,0 +1,19 @@
+##################################################################
+# Testcase - Huge File Write and Read
+##################################################################
+
+myfile1 = openfile("hugefile.txt", True)
+try:
+ myfile1.writeat("SSSss!@#$%^&*()"*100000,0)
+except:
+ log("Testcase Failed: Huge File Write!")
+
+try:
+ myfile1.readat(100000,10)
+except:
+ log("Testcase Failed: Huge File Read")
+
+myfile1.close()
+
+
+
